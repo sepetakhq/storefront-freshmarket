@@ -1,0 +1,364 @@
+import { Link } from 'react-router-dom';
+
+import { Img, SIZES } from '../ui/Img.jsx';
+import { EmptyState, InlineError, Skeleton } from '../ui/states.jsx';
+import { useCart, MAX_QTY } from '@sepetakhq/storefront-kit/cart/CartProvider';
+import { useCartLines } from '@sepetakhq/storefront-kit/cart/useCartLines';
+import { useConfig } from '@sepetakhq/storefront-kit/config/ConfigProvider';
+import { orderNote, shortNote } from '@sepetakhq/storefront-kit/lib/preorder';
+import { blockerNotice, windowNote } from '@sepetakhq/storefront-kit/lib/availability';
+import { didPurgeLegacy } from '@sepetakhq/storefront-kit/lib/storage';
+import { fmt } from '@sepetakhq/storefront-kit/shared/format';
+
+export default function CartRoute() {
+  const { freeShipping, freeShippingMin } = useConfig();
+  const cart = useCart();
+  const { lines, statuses, subtotal, isLoading, hasBlockers, preorderLeadDays } = useCartLines();
+
+  if (cart.isEmpty) {
+    return (
+      <main style={{ flex: 1, padding: '60px 20px' }}>
+        <EmptyState
+          title="Keranjangmu masih kosong"
+          body={
+            didPurgeLegacy()
+              ? 'Keranjang lama direset karena katalognya sudah diperbarui. Pilih lagi koleksi favoritmu.'
+              : 'Belum ada yang dipilih. Tambahkan produk segar favorit Anda dulu.'
+          }
+          action={
+            <Link to="/katalog" className="hv-dark" style={darkButton}>
+              Mulai belanja
+            </Link>
+          }
+        />
+      </main>
+    );
+  }
+
+  const remaining = Math.max(0, freeShippingMin - subtotal);
+  const pct = freeShippingMin ? Math.min(100, Math.round((subtotal / freeShippingMin) * 100)) : 100;
+
+  return (
+    <main
+      aria-label="Keranjang"
+      style={{ flex: 1, maxWidth: 900, margin: '0 auto', padding: '36px 20px 60px', width: '100%' }}
+    >
+      <h1 style={{ fontFamily: "'Plus Jakarta Sans',system-ui,sans-serif", fontSize: 40, fontWeight: 600, margin: '0 0 20px' }}>
+        Keranjang
+      </h1>
+
+      {/* Nothing to make progress towards once the offer is switched off. */}
+      {freeShipping && (
+        <div
+          style={{
+            background: '#EFF1EC',
+            border: '1px solid #E4E7DF',
+            borderRadius: 16,
+            padding: '14px 18px',
+            marginBottom: 22,
+          }}
+        >
+          <div style={{ fontSize: 13.5, fontWeight: 600 }}>
+            {remaining > 0
+              ? `Belanja ${fmt(remaining)} lagi untuk gratis ongkir`
+              : 'Selamat — pesananmu gratis ongkir 🎉'}
+          </div>
+          <div style={{ background: '#E4E7DF', borderRadius: 999, height: 6, marginTop: 10 }}>
+            <div
+              style={{
+                width: `${pct}%`,
+                height: '100%',
+                background: '#1B7A43',
+                borderRadius: 999,
+                transition: 'width 0.3s',
+              }}
+            />
+          </div>
+        </div>
+      )}
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        {lines.map((line) => (
+          <CartLine key={line.key} line={line} onQty={cart.setQty} onRemove={cart.remove} />
+        ))}
+      </div>
+
+      <div
+        style={{
+          borderTop: '1px solid #E4E7DF',
+          marginTop: 26,
+          paddingTop: 20,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 10,
+        }}
+      >
+        <Row label="Subtotal" value={isLoading ? '…' : fmt(subtotal)} />
+        <Row label="Ongkir" value="Dihitung saat checkout" muted />
+        {/* The authoritative price appears once, at the draft. Saying so here
+            is more honest than a total that can change at the next step. */}
+        <p style={{ fontSize: 12.5, color: '#77887A', margin: 0 }}>
+          Total akhir, ongkir, dan diskon dihitung di langkah berikutnya.
+        </p>
+
+        {/* Before the checkout button, not after: the wait is part of what the
+            buyer is agreeing to, and one order ships once so the slowest line
+            sets it. */}
+        {preorderLeadDays ? (
+          <p style={{ fontSize: 12.5, fontWeight: 600, color: '#8A6D1F', margin: 0 }}>
+            {orderNote(preorderLeadDays)}.
+          </p>
+        ) : null}
+
+        {hasBlockers ? (
+          <div
+            role="alert"
+            style={{
+              background: '#EAF4E8',
+              border: '1px solid #DFEBDB',
+              borderRadius: 12,
+              padding: '12px 14px',
+              fontSize: 13,
+              marginTop: 4,
+            }}
+          >
+            {blockerNotice(statuses)}
+          </div>
+        ) : null}
+
+        <Link
+          to="/checkout"
+          className="hv-primary"
+          aria-disabled={hasBlockers || isLoading}
+          onClick={(e) => {
+            if (hasBlockers || isLoading) e.preventDefault();
+          }}
+          style={{
+            marginTop: 10,
+            textAlign: 'center',
+            background: hasBlockers || isLoading ? '#E4E7DF' : '#1B7A43',
+            color: hasBlockers || isLoading ? '#5C6B60' : '#fff',
+            borderRadius: 999,
+            padding: '15px 26px',
+            fontWeight: 700,
+            fontSize: 15,
+            cursor: hasBlockers || isLoading ? 'not-allowed' : 'pointer',
+          }}
+        >
+          Lanjut ke Checkout
+        </Link>
+        <Link to="/katalog" className="hv-pink" style={{ textAlign: 'center', fontWeight: 600, fontSize: 14 }}>
+          Lanjut belanja
+        </Link>
+      </div>
+    </main>
+  );
+}
+
+function CartLine({ line, onQty, onRemove }) {
+  const { item, key, product, label, status, error, refetch, available, preorder } = line;
+  const remove = () => onRemove(key);
+
+  if (status === 'loading') {
+    return (
+      <div style={{ ...card, alignItems: 'center' }}>
+        <Skeleton ratio="72/90" radius={12} style={{ width: 72, flexShrink: 0 }} />
+        <div style={{ flex: 1 }}>
+          <Skeleton height={15} width="60%" />
+          <Skeleton height={13} width="30%" style={{ marginTop: 10 }} />
+        </div>
+      </div>
+    );
+  }
+
+  if (status === 'error') {
+    return (
+      <div style={card}>
+        <div style={{ flex: 1 }}>
+          <InlineError error={error} onRetry={refetch} />
+        </div>
+      </div>
+    );
+  }
+
+  // A 404 means the product was unpublished or deleted -- or the variant this
+  // line named no longer exists. The only useful action left is removing it,
+  // so that is what the line offers.
+  if (status === 'gone') {
+    return (
+      <div style={{ ...card, background: '#F3F5F0' }}>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontWeight: 700, fontSize: 15, color: '#5C6B60' }}>
+            {product ? 'Varian sudah tidak tersedia' : 'Produk sudah tidak tersedia'}
+          </div>
+          <div style={{ fontSize: 13, color: '#77887A', marginTop: 4 }}>{product?.name ?? item.slug}</div>
+        </div>
+        <button type="button" onClick={remove} style={removeButton}>
+          Hapus
+        </button>
+      </div>
+    );
+  }
+
+  // The product grew variants after this line was added, so it names none.
+  // The sale is still wanted; the line points at the page where the choice
+  // is made, and removing it is the way to replace it.
+  if (status === 'variant_required') {
+    return (
+      <div style={{ ...card, background: '#F3F5F0' }}>
+        <div style={{ width: 72, flexShrink: 0 }}>
+          <Img src={product.image} srcSet={product.image_srcset} sizes={SIZES.cartLine} alt={product.name} ratio="72/90" radius={12} />
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <Link to={`/produk/${product.slug}`} style={{ fontWeight: 700, fontSize: 15, color: '#12251B' }}>
+            {product.name}
+          </Link>
+          <div style={{ fontSize: 13, fontWeight: 600, color: '#B8860B', marginTop: 8 }}>
+            Produk ini sekarang punya varian.{' '}
+            <Link to={`/produk/${product.slug}`} style={{ color: '#1B7A43', fontWeight: 700 }}>
+              Pilih varian
+            </Link>
+            , lalu hapus baris ini.
+          </div>
+        </div>
+        <button type="button" onClick={remove} style={removeButton}>
+          Hapus
+        </button>
+      </div>
+    );
+  }
+
+  // Three statuses share one presentation, because they share one meaning on
+  // this screen: the line stays, priced and pictured, and the quantity
+  // stepper goes away because there is no quantity to choose. What separates
+  // them is the sentence underneath.
+  const blocked = status === 'soldout' || status === 'scheduled' || status === 'ended';
+  const note = windowNote(product);
+
+  return (
+    <div style={card}>
+      <div style={{ width: 72, flexShrink: 0 }}>
+        <Img
+          src={product.image}
+          srcSet={product.image_srcset}
+          sizes={SIZES.cartLine}
+          alt={product.name}
+          ratio="72/90"
+          radius={12}
+          style={blocked ? { opacity: 0.55 } : undefined}
+        />
+      </div>
+
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <Link to={`/produk/${product.slug}`} style={{ fontWeight: 700, fontSize: 15, color: '#12251B' }}>
+          {product.name}
+        </Link>
+        <div style={{ fontSize: 13, color: '#5C6B60', marginTop: 2 }}>
+          {label ? <span style={{ color: '#12251B', fontWeight: 600 }}>{label}</span> : product.category_label}
+        </div>
+        <div style={{ fontWeight: 700, color: '#1B7A43', marginTop: 6 }}>{fmt(product.price)}</div>
+
+        {status === 'soldout' ? (
+          <div style={{ fontSize: 13, fontWeight: 600, color: '#0E3B22', marginTop: 8 }}>
+            Stok habis
+          </div>
+        ) : note ? (
+          // A scheduled line is the one blocker the buyer can act on -- come
+          // back when it opens -- so it says when rather than only that it
+          // cannot be bought.
+          <div style={{ fontSize: 13, fontWeight: 600, color: note.color, marginTop: 8 }}>
+            {note.text}
+          </div>
+        ) : status === 'overstock' ? (
+          <div style={{ fontSize: 13, color: '#B8860B', marginTop: 8 }}>
+            Tersisa {available}.{' '}
+            <button
+              type="button"
+              onClick={() => onQty(key, available)}
+              style={{ color: '#1B7A43', fontWeight: 700 }}
+            >
+              Sesuaikan
+            </button>
+          </div>
+        ) : preorder ? (
+          <div style={{ fontSize: 13, fontWeight: 600, color: '#8A6D1F', marginTop: 8 }}>
+            {shortNote(product)}
+          </div>
+        ) : null}
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
+        {!blocked ? (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              border: '1px solid #E4E7DF',
+              borderRadius: 999,
+              overflow: 'hidden',
+            }}
+          >
+            <button
+              type="button"
+              className="hv-cream"
+              aria-label="Kurangi jumlah"
+              disabled={item.qty <= 1}
+              onClick={() => onQty(key, item.qty - 1)}
+              style={qtyButton}
+            >
+              −
+            </button>
+            <span style={{ minWidth: 32, textAlign: 'center', fontWeight: 700 }}>{item.qty}</span>
+            <button
+              type="button"
+              className="hv-cream"
+              aria-label="Tambah jumlah"
+              disabled={item.qty >= Math.min(MAX_QTY, available)}
+              onClick={() => onQty(key, item.qty + 1)}
+              style={qtyButton}
+            >
+              +
+            </button>
+          </div>
+        ) : null}
+        <button type="button" onClick={remove} style={removeButton}>
+          Hapus
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function Row({ label, value, muted }) {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14.5 }}>
+      <span style={{ color: '#5C6B60' }}>{label}</span>
+      <span style={{ fontWeight: muted ? 400 : 700, color: muted ? '#5C6B60' : '#12251B' }}>
+        {value}
+      </span>
+    </div>
+  );
+}
+
+const card = {
+  display: 'flex',
+  gap: 14,
+  background: '#fff',
+  border: '1px solid #E4E7DF',
+  borderRadius: 16,
+  padding: 14,
+};
+
+const qtyButton = { width: 34, height: 36, fontWeight: 700, fontSize: 16 };
+
+const removeButton = { color: '#77887A', fontSize: 13, fontWeight: 600, alignSelf: 'flex-end' };
+
+const darkButton = {
+  display: 'inline-block',
+  background: '#12251B',
+  color: '#F7F6F0',
+  borderRadius: 999,
+  padding: '13px 28px',
+  fontWeight: 700,
+  fontSize: 14.5,
+};
