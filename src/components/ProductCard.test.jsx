@@ -7,7 +7,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const cart = { items: [], add: vi.fn(), setQty: vi.fn(), remove: vi.fn() };
 vi.mock('@sepetakhq/storefront-kit/cart/CartProvider', () => ({ useCart: () => cart }));
 const toast = { showToast: vi.fn() };
-vi.mock('@sepetakhq/storefront-kit/ui/ToastProvider', () => ({ useToast: () => toast }));
+// The kit's useToast returns the show function itself; mocking it as an
+// object is how a card that threw on every quick-add once passed here.
+vi.mock('@sepetakhq/storefront-kit/ui/ToastProvider', () => ({ useToast: () => toast.showToast }));
 
 const ProductCard = (await import('./ProductCard.jsx')).default;
 

@@ -83,7 +83,8 @@ export default function ProductCard({ p, variant = 'grid' }) {
  */
 export function QuickAdd({ p, compact = false }) {
   const cart = useCart();
-  const { showToast } = useToast();
+  // The kit's context value is the function itself, not an object holding it.
+  const showToast = useToast();
   const key = lineKey({ productId: p.id, variantId: null });
   const line = cart.items.find((it) => lineKey(it) === key);
   const qty = line?.qty ?? 0;

@@ -11,7 +11,7 @@ vi.mock('@sepetakhq/storefront-kit/hooks/queries', () => ({ useHome: () => home 
 
 const cart = { items: [], add: vi.fn(), setQty: vi.fn(), remove: vi.fn() };
 vi.mock('@sepetakhq/storefront-kit/cart/CartProvider', () => ({ useCart: () => cart }));
-vi.mock('@sepetakhq/storefront-kit/ui/ToastProvider', () => ({ useToast: () => ({ showToast: vi.fn() }) }));
+vi.mock('@sepetakhq/storefront-kit/ui/ToastProvider', () => ({ useToast: () => vi.fn() }));
 
 const HomeRoute = (await import('./HomeRoute.jsx')).default;
 
