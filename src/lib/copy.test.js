@@ -124,7 +124,7 @@ describe('catalogue helpers', () => {
     expect(catalogTitle({}, cats)).toBe('Semua Produk');
     expect(catalogTitle({ cat: 'sayur' }, cats)).toBe('Sayur & Buah');
     expect(catalogTitle({ cat: 'nope' }, cats)).toBe('nope');
-    expect(catalogTitle({ cat: 'sayur', sale: true }, cats)).toBe('Promo & Diskon');
+    expect(catalogTitle({ cat: 'sayur', sale: true }, cats)).toBe('Promo');
     expect(catalogTitle({ sale: true, q: 'apel' }, cats)).toBe('Hasil pencarian “apel”');
   });
   it('chips carry the param that clears them', () => {
@@ -147,8 +147,8 @@ describe('catalogue helpers', () => {
 describe('sectionText', () => {
   it('reads the merchant label, trimmed, and falls back when blank', () => {
     expect(sectionText({ promo_title: '  Diskon  ' }, 'promo_title')).toBe('Diskon');
-    expect(sectionText({ promo_title: '' }, 'promo_title')).toBe('Promo & Diskon');
-    expect(sectionText({ promo_title: '   ' }, 'promo_title')).toBe('Promo & Diskon');
+    expect(sectionText({ promo_title: '' }, 'promo_title')).toBe('Promo');
+    expect(sectionText({ promo_title: '   ' }, 'promo_title')).toBe('Promo');
     expect(sectionText(undefined, 'countdown_label')).toBe('Berakhir dalam');
     expect(sectionText({}, 'no_such_key')).toBe('');
   });
@@ -162,7 +162,7 @@ describe('sectionText', () => {
   it('puts the promo label in the catalogue title and chip', () => {
     expect(catalogTitle({ sale: true }, [], 'Obral')).toBe('Obral');
     expect(filterChips({ sale: true }, [], 'Obral')[0].label).toBe('Obral');
-    expect(filterChips({ sale: true }, [])[0].label).toBe('Promo & Diskon');
+    expect(filterChips({ sale: true }, [])[0].label).toBe('Promo');
   });
 });
 

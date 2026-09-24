@@ -126,7 +126,7 @@ export const DEFAULT_LABELS = {
   hero_secondary_cta: 'Lihat promo',
   campaign_cta: 'Lihat semua deal',
   related_heading: 'Kamu mungkin suka',
-  promo_title: 'Promo & Diskon',
+  promo_title: 'Promo',
   about_address_heading: 'Kunjungi kami',
   footer_shop_heading: 'Belanja',
   footer_contact_heading: 'Kontak',

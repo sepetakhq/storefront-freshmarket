@@ -24,7 +24,7 @@ describe('Footer', () => {
   it('draws the template headings behind blank labels', () => {
     setup({ footer_shop_heading: '  ' });
     for (const t of ['Belanja', 'Kategori', 'Kontak', 'Pembayaran']) expect(screen.getByText(t)).toBeTruthy();
-    expect(screen.getByRole('link', { name: 'Promo & Diskon' })).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Promo' })).toBeTruthy();
   });
 
   it('draws the merchant headings when set', () => {
