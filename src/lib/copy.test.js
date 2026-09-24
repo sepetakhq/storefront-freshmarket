@@ -8,8 +8,10 @@ import {
   contactRows,
   discountPct,
   filterChips,
+  freeShippingLine,
   initials,
   quickAddState,
+  sectionText,
   showCountdown,
   sortOrDefault,
   stockLine,
@@ -139,5 +141,48 @@ describe('catalogue helpers', () => {
   it('maps the API banner tones to two looks', () => {
     expect(bannerBg('pink').background).not.toBe(bannerBg('butter').background);
     expect(bannerBg(undefined)).toEqual(bannerBg('butter'));
+  });
+});
+
+describe('sectionText', () => {
+  it('reads the merchant label, trimmed, and falls back when blank', () => {
+    expect(sectionText({ promo_title: '  Diskon  ' }, 'promo_title')).toBe('Diskon');
+    expect(sectionText({ promo_title: '' }, 'promo_title')).toBe('Promo & Diskon');
+    expect(sectionText({ promo_title: '   ' }, 'promo_title')).toBe('Promo & Diskon');
+    expect(sectionText(undefined, 'countdown_label')).toBe('Berakhir dalam');
+    expect(sectionText({}, 'no_such_key')).toBe('');
+  });
+
+  it('falls back when the substitution withholds the text', () => {
+    expect(sectionText({ hero_chip_shipping_note: 'di atas {free_shipping_min}' }, 'hero_chip_shipping_note', () => '')).toBe(
+      'min. belanja {free_shipping_min}',
+    );
+  });
+
+  it('puts the promo label in the catalogue title and chip', () => {
+    expect(catalogTitle({ sale: true }, [], 'Obral')).toBe('Obral');
+    expect(filterChips({ sale: true }, [], 'Obral')[0].label).toBe('Obral');
+    expect(filterChips({ sale: true }, [])[0].label).toBe('Promo & Diskon');
+  });
+});
+
+describe('freeShippingLine', () => {
+  const copy = (s) => s.replaceAll('{free_shipping_min}', 'Rp 150.000');
+  const on = { brand: { sections: {} }, copy, freeShipping: true, freeShippingMin: 150000 };
+
+  it('reads the template wording by default', () => {
+    expect(freeShippingLine(on)).toBe('Gratis ongkir min. belanja Rp 150.000');
+  });
+
+  it('reads the merchant labels, whitespace-only as blank', () => {
+    const sections = { hero_chip_shipping: ' Bebas ongkir ', hero_chip_shipping_note: 'di atas {free_shipping_min}' };
+    expect(freeShippingLine({ ...on, brand: { sections } })).toBe('Bebas ongkir di atas Rp 150.000');
+    expect(freeShippingLine({ ...on, brand: { sections: { hero_chip_shipping: '  ' } } })).toBe('Gratis ongkir min. belanja Rp 150.000');
+  });
+
+  it('is withheld when the offer is off, has no threshold, or copy withholds it', () => {
+    expect(freeShippingLine({ ...on, freeShipping: false })).toBe('');
+    expect(freeShippingLine({ ...on, freeShippingMin: 0 })).toBe('');
+    expect(freeShippingLine({ ...on, copy: () => '' })).toBe('');
   });
 });

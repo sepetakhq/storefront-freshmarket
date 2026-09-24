@@ -33,7 +33,7 @@ vi.mock('@sepetakhq/storefront-kit/hooks/queries', () => ({
 
 const cartCalls = [];
 vi.mock('@sepetakhq/storefront-kit/cart/CartProvider', () => ({
-  useCart: () => ({ add: (...args) => cartCalls.push(args), lines: [] }),
+  useCart: () => ({ add: (...args) => cartCalls.push(args), lines: [], items: [] }),
   MAX_QTY: 99,
 }));
 
@@ -103,6 +103,20 @@ describe('ProductRoute detail panel', () => {
     expect(screen.getByText('Cara penyimpanan')).toBeTruthy();
     expect(screen.getByText('Pengiriman & pengemasan')).toBeTruthy();
     expect(screen.queryByText('Detail bahan & ukuran')).toBeNull();
+  });
+
+  it('keeps the template headings behind whitespace-only labels, and names the related row', () => {
+    sections.product_details_heading = '   ';
+    const related = [{ id: 'r', slug: 'r', name: 'Lain', price: 1, stock: 1, images: [] }];
+    withProduct({ material_spec: 'Voal', related });
+    panel();
+    expect(screen.getByText('Detail bahan & ukuran')).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Kamu mungkin suka' })).toBeTruthy();
+
+    cleanup();
+    sections.related_heading = 'Serupa';
+    panel();
+    expect(screen.getByRole('heading', { name: 'Serupa' })).toBeTruthy();
   });
 
   // The whole point of the change: the server resolved the chain, so the page

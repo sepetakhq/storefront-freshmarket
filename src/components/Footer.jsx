@@ -5,7 +5,7 @@ import { useCategories } from '@sepetakhq/storefront-kit/hooks/queries';
 
 import { BrandMark } from './BrandMark.jsx';
 import SocialLinks from './SocialLinks.jsx';
-import { contactRows } from '../lib/copy.js';
+import { contactRows, sectionText } from '../lib/copy.js';
 
 const colTitle = {
   fontWeight: 800,
@@ -31,6 +31,7 @@ export default function Footer() {
   const contact = contactRows(brand);
   const payments = (paymentMethods ?? []).filter((m) => m.enabled).map((m) => m.name).filter(Boolean);
   const links = brand.social_links ?? [];
+  const sections = brand.sections;
 
   return (
     <footer style={{ background: '#0E3B22', color: '#E4E7DF', marginTop: 'auto' }}>
@@ -45,21 +46,21 @@ export default function Footer() {
 
         {shopLinks.length > 0 && (
           <div>
-            <div style={colTitle}>Belanja</div>
+            <div style={colTitle}>{sectionText(sections, 'footer_shop_heading')}</div>
             {shopLinks.map((n) => (
               <Link key={n.path} to={n.path} className="hv-blush" style={link}>
                 {n.label}
               </Link>
             ))}
             <Link to="/katalog?sale=1" className="hv-blush" style={link}>
-              Promo
+              {sectionText(sections, 'promo_title')}
             </Link>
           </div>
         )}
 
         {cats.length > 0 && (
           <div>
-            <div style={colTitle}>Kategori</div>
+            <div style={colTitle}>{sectionText(sections, 'footer_categories_heading')}</div>
             {cats.map((c) => (
               <Link key={c.key} to={`/katalog?cat=${encodeURIComponent(c.key)}`} className="hv-blush" style={link}>
                 {c.label}
@@ -72,7 +73,7 @@ export default function Footer() {
           <div>
             {contact.length > 0 && (
               <>
-                <div style={colTitle}>Kontak</div>
+                <div style={colTitle}>{sectionText(sections, 'footer_contact_heading')}</div>
                 {contact.map((r) => (
                   <div key={r.kind} style={{ ...link }}>
                     {r.kind === 'email' ? <a href={`mailto:${r.text}`} style={{ color: 'inherit' }}>{r.text}</a> : r.text}
@@ -82,7 +83,7 @@ export default function Footer() {
             )}
             {payments.length > 0 && (
               <>
-                <div style={{ ...colTitle, marginTop: 18 }}>Pembayaran</div>
+                <div style={{ ...colTitle, marginTop: 18 }}>{sectionText(sections, 'footer_payment_heading')}</div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                   {payments.map((p) => (
                     <span key={p} style={{ fontSize: 11.5, fontWeight: 700, background: 'rgba(255,255,255,.08)', color: '#CFE3D5', padding: '4px 8px', borderRadius: 6 }}>

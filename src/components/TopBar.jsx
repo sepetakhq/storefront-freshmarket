@@ -1,7 +1,7 @@
 import { useConfig } from '@sepetakhq/storefront-kit/config/ConfigProvider';
 
 import SocialLinks from './SocialLinks.jsx';
-import { contactRows } from '../lib/copy.js';
+import { contactRows, freeShippingLine } from '../lib/copy.js';
 
 /**
  * The dark strip above the header: address, the free-shipping line, phone,
@@ -11,12 +11,13 @@ import { contactRows } from '../lib/copy.js';
  *
  * Exported pieces for the test; the component itself needs the config.
  */
-export function topBarSegments({ brand, freeShipping, freeShippingMin, freeShippingMinLabel }) {
-  const rows = contactRows(brand).filter((r) => r.kind !== 'email');
+export function topBarSegments(cfg) {
+  const rows = contactRows(cfg.brand).filter((r) => r.kind !== 'email');
   const segs = rows.map((r) => r.text);
-  if (freeShipping && freeShippingMin > 0 && freeShippingMinLabel) {
+  const ship = freeShippingLine(cfg);
+  if (ship) {
     // After the address, before the phone: the design's order.
-    segs.splice(rows[0]?.kind === 'address' ? 1 : 0, 0, `Gratis ongkir min. belanja ${freeShippingMinLabel}`);
+    segs.splice(rows[0]?.kind === 'address' ? 1 : 0, 0, ship);
   }
   return segs;
 }

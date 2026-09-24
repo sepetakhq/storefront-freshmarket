@@ -39,7 +39,7 @@ export function tintFor(key) {
   return TINTS[h % TINTS.length];
 }
 
-/** "Sedang diskon" over the pages already loaded. */
+/** The sale filter over the pages already loaded. */
 export function applySaleFilter(items, on) {
   if (!on) return items ?? [];
   return (items ?? []).filter((p) => p?.on_sale);
@@ -111,10 +111,58 @@ export function contactRows(brand) {
   return rows;
 }
 
+/**
+ * The template's own wording for every section_copy label it draws. The
+ * merchant's text from the backoffice replaces each one; blank keeps these.
+ */
+export const DEFAULT_LABELS = {
+  cats_heading: 'Belanja per Kategori',
+  grid_see_all: 'Lihat semua',
+  story_eyebrow: 'Cerita kami',
+  story_cta: 'Tentang kami',
+  product_details_heading: 'Detail bahan & ukuran',
+  product_care_heading: 'Cara perawatan',
+  product_shipping_heading: 'Pengiriman',
+  hero_secondary_cta: 'Lihat promo',
+  campaign_cta: 'Lihat semua deal',
+  related_heading: 'Kamu mungkin suka',
+  promo_title: 'Promo & Diskon',
+  about_address_heading: 'Kunjungi kami',
+  footer_shop_heading: 'Belanja',
+  footer_contact_heading: 'Kontak',
+  footer_payment_heading: 'Pembayaran',
+  footer_categories_heading: 'Kategori',
+  hero_chip_shipping: 'Gratis ongkir',
+  hero_chip_shipping_note: 'min. belanja {free_shipping_min}',
+  countdown_label: 'Berakhir dalam',
+};
+
+/**
+ * One label: the merchant's section_copy text, trimmed, else the template's.
+ * `copy` is the config's substitution, for labels that may carry
+ * {free_shipping_min}; a sentence it withholds falls back too, rather than
+ * leaving the slot blank.
+ */
+export function sectionText(sections, key, copy) {
+  const raw = String(sections?.[key] ?? '').trim();
+  const text = raw && copy ? String(copy(raw) ?? '').trim() : raw;
+  return text || DEFAULT_LABELS[key] || '';
+}
+
+/**
+ * "Gratis ongkir min. belanja Rp 150.000" for the top bar and the drawer, in
+ * the merchant's words, or '' while the offer is off or has no threshold.
+ */
+export function freeShippingLine({ brand, copy, freeShipping, freeShippingMin } = {}) {
+  if (!freeShipping || !(freeShippingMin > 0) || !copy) return '';
+  const note = copy(sectionText(brand?.sections, 'hero_chip_shipping_note'));
+  return note ? `${sectionText(brand?.sections, 'hero_chip_shipping')} ${note}` : '';
+}
+
 /** The catalogue heading for the active filters. */
-export function catalogTitle({ cat, sale, q } = {}, categories = []) {
+export function catalogTitle({ cat, sale, q } = {}, categories = [], promoTitle = DEFAULT_LABELS.promo_title) {
   if (q) return `Hasil pencarian “${q}”`;
-  if (sale) return 'Promo & Diskon';
+  if (sale) return promoTitle;
   if (cat && cat !== 'Semua') {
     const found = categories.find((c) => c.key === cat);
     return found?.label ?? cat;
@@ -123,14 +171,14 @@ export function catalogTitle({ cat, sale, q } = {}, categories = []) {
 }
 
 /** Active filters as removable chips; each carries the params that clear it. */
-export function filterChips({ cat, sale, q } = {}, categories = []) {
+export function filterChips({ cat, sale, q } = {}, categories = [], promoTitle = DEFAULT_LABELS.promo_title) {
   const chips = [];
   if (cat && cat !== 'Semua') {
     const found = categories.find((c) => c.key === cat);
     chips.push({ key: 'cat', label: found?.label ?? cat, clear: { cat: null } });
   }
   if (q) chips.push({ key: 'q', label: `“${q}”`, clear: { q: null } });
-  if (sale) chips.push({ key: 'sale', label: 'Sedang diskon', clear: { sale: null } });
+  if (sale) chips.push({ key: 'sale', label: promoTitle, clear: { sale: null } });
   return chips;
 }
 

@@ -89,5 +89,55 @@ describe('HomeRoute', () => {
     cleanup();
     setup([HERO], { whatsapp_url: 'https://wa.me/62' });
     expect(screen.getByRole('link', { name: 'Chat WhatsApp' }).getAttribute('href')).toBe('https://wa.me/62');
+    cleanup();
+    setup([HERO], { whatsapp_url: 'https://wa.me/62', whatsapp_text: 'Tanya admin' });
+    expect(screen.getByRole('link', { name: 'Tanya admin' })).toBeTruthy();
+    // The button's words are not also the description under the heading.
+    expect(screen.getAllByText('Tanya admin')).toHaveLength(1);
+    cleanup();
+    setup([HERO], { whatsapp_url: 'https://wa.me/62', whatsapp_text: '   ' });
+    expect(screen.getByRole('link', { name: 'Chat WhatsApp' })).toBeTruthy();
+  });
+
+  const products = [{ id: 'p', slug: 'a', name: 'Apel', price: 1, stock: 1 }];
+  const soon = () => new Date(Date.now() + 2 * 3600 * 1000).toISOString();
+  const page = () => [
+    HERO,
+    { id: 'k', type: 'cats', cats: [{ key: 'sayur', label: 'Sayur' }] },
+    { id: 'c', type: 'campaign', campaign: { title: 'Deal', ends_at: soon(), products } },
+    { id: 'g', type: 'grid', grid: { title: 'Terlaris', products } },
+    { id: 's', type: 'story', story: { title: 'Kata Pelanggan', text: 'Segar.' } },
+  ];
+
+  it('draws the template wording behind blank or whitespace-only labels', () => {
+    setup(page(), { sections: { hero_secondary_cta: '  ', campaign_cta: '' } });
+    expect(screen.getByRole('link', { name: 'Lihat promo' })).toBeTruthy();
+    expect(screen.getByText('Belanja per Kategori')).toBeTruthy();
+    expect(screen.getByText('Berakhir dalam')).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Lihat semua deal →' })).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Lihat semua →' })).toBeTruthy();
+    expect(screen.getByText('Cerita kami')).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Tentang kami' }).getAttribute('href')).toBe('/tentang');
+  });
+
+  it('draws the merchant labels when set, arrows kept outside them', () => {
+    setup(page(), {
+      sections: {
+        hero_secondary_cta: 'Cek diskon',
+        cats_heading: ' Lorong ',
+        countdown_label: 'Sisa waktu',
+        campaign_cta: 'Semua promo',
+        grid_see_all: 'Lihat lagi',
+        story_eyebrow: 'Kata mereka',
+        story_cta: 'Kenalan',
+      },
+    });
+    expect(screen.getByRole('link', { name: 'Cek diskon' })).toBeTruthy();
+    expect(screen.getByText('Lorong')).toBeTruthy();
+    expect(screen.getByText('Sisa waktu')).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Semua promo →' })).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Lihat lagi →' })).toBeTruthy();
+    expect(screen.getByText('Kata mereka')).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Kenalan' }).getAttribute('href')).toBe('/tentang');
   });
 });

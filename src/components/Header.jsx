@@ -9,12 +9,13 @@ import { fmt } from '@sepetakhq/storefront-kit/shared/format';
 
 import { BrandMark } from './BrandMark.jsx';
 import CategoryMenu from './CategoryMenu.jsx';
+import { freeShippingLine, sectionText } from '../lib/copy.js';
 
 const WORDMARK = { primary: '#12251B', accent: '#1B7A43', size: 22 };
 
 /**
  * Two rows on a desktop: the mark, the search box and the cart; then the
- * category button, the merchant's nav and a fixed "Promo" that filters the
+ * category button, the merchant's nav and a promo link that filters the
  * catalogue to what is on sale. One row on a phone, with a drawer.
  */
 export default function Header({ menuOpen, onToggleMenu, onNavigate }) {
@@ -127,6 +128,7 @@ export default function Header({ menuOpen, onToggleMenu, onNavigate }) {
 }
 
 function PromoLink() {
+  const { brand } = useConfig();
   const [params] = useSearchParams();
   const { pathname } = useLocation();
   const active = pathname === '/katalog' && params.get('sale') === '1';
@@ -144,7 +146,7 @@ function PromoLink() {
         letterSpacing: '.3px',
       }}
     >
-      ⚡ Promo
+      ⚡ {sectionText(brand.sections, 'promo_title')}
     </Link>
   );
 }
@@ -204,7 +206,10 @@ export function SearchBox({ compact = false }) {
  * the page under it stays put.
  */
 export function MobileDrawer({ open, onClose }) {
-  const { brand, freeShipping, freeShippingMin, freeShippingMinLabel } = useConfig();
+  const config = useConfig();
+  const { brand } = config;
+  const sections = brand.sections;
+  const ship = freeShippingLine(config);
   const { data } = useCategories();
   const cats = data ?? [];
 
@@ -233,18 +238,18 @@ export function MobileDrawer({ open, onClose }) {
             ×
           </button>
         </div>
-        <div style={head}>Belanja</div>
+        <div style={head}>{sectionText(sections, 'footer_shop_heading')}</div>
         {brand.nav.map((n) => (
           <Link key={n.path} to={n.path} onClick={onClose}>
             {n.label}
           </Link>
         ))}
         <Link to="/katalog?sale=1" onClick={onClose}>
-          ⚡ Promo
+          ⚡ {sectionText(sections, 'promo_title')}
         </Link>
         {cats.length > 0 && (
           <>
-            <div style={head}>Kategori</div>
+            <div style={head}>{sectionText(sections, 'footer_categories_heading')}</div>
             {cats.map((c) => (
               <Link key={c.key} to={`/katalog?cat=${encodeURIComponent(c.key)}`} onClick={onClose}>
                 {c.label}
@@ -256,11 +261,7 @@ export function MobileDrawer({ open, onClose }) {
         <Link to="/lacak" onClick={onClose}>
           Lacak Pesanan
         </Link>
-        {freeShipping && freeShippingMin > 0 && (
-          <p style={{ fontSize: 12.5, color: 'var(--fm-muted)', margin: '16px 8px 0' }}>
-            Gratis ongkir min. belanja {freeShippingMinLabel}.
-          </p>
-        )}
+        {ship && <p style={{ fontSize: 12.5, color: 'var(--fm-muted)', margin: '16px 8px 0' }}>{ship}.</p>}
       </aside>
     </>
   );

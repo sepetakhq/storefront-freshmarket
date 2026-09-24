@@ -11,7 +11,7 @@ import { Tile } from '../components/Tile.jsx';
 import { Img, SIZES } from '../ui/Img.jsx';
 import { CountdownCells } from '../ui/Countdown.jsx';
 import { EmptyState, ErrorState, ProductGridSkeleton, Skeleton } from '../ui/states.jsx';
-import { bannerBg, initials, showCountdown } from '../lib/copy.js';
+import { bannerBg, initials, sectionText, showCountdown } from '../lib/copy.js';
 
 const wrap = { maxWidth: 1280, margin: '0 auto', padding: '0 20px' };
 const h2 = { fontSize: 24, fontWeight: 800, margin: 0, letterSpacing: '-0.3px' };
@@ -94,7 +94,7 @@ function Hero({ hero }) {
               {hero.cta || 'Belanja sekarang'} →
             </Link>
             <Link to="/katalog?sale=1" className="fm-btn" style={{ border: '1.5px solid rgba(255,255,255,.35)', color: '#fff' }}>
-              Lihat promo
+              {sectionText(brand.sections, 'hero_secondary_cta')}
             </Link>
           </div>
         </div>
@@ -150,7 +150,7 @@ function Categories({ cats }) {
   const { brand } = useConfig();
   return (
     <section style={{ ...wrap, padding: '40px 20px 0' }}>
-      <h2 style={h2}>{brand.sections?.cats_heading || 'Belanja per Kategori'}</h2>
+      <h2 style={h2}>{sectionText(brand.sections, 'cats_heading')}</h2>
       <div style={{ marginTop: 16, display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))' }}>
         {cats.map((c) => (
           <Link key={c.key} to={`/katalog?cat=${encodeURIComponent(c.key)}`} className="hv-card" style={{ background: '#fff', border: '1px solid var(--fm-line)', borderRadius: 14, padding: 12, display: 'flex', gap: 12, alignItems: 'center', color: 'var(--fm-text)', transition: 'transform .15s, box-shadow .15s' }}>
@@ -184,12 +184,12 @@ function Deals({ campaign }) {
         </div>
         {ticking && (
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ fontSize: 12.5, color: 'var(--fm-muted)', fontWeight: 600 }}>Berakhir dalam</span>
+            <span style={{ fontSize: 12.5, color: 'var(--fm-muted)', fontWeight: 600 }}>{sectionText(brand.sections, 'countdown_label')}</span>
             <CountdownCells until={campaign.ends_at} onExpire={() => qc.invalidateQueries({ queryKey: qk.home })} />
           </div>
         )}
         <Link to="/katalog?sale=1" className="hv-pink" style={{ marginLeft: 'auto', fontWeight: 700, fontSize: 13.5 }}>
-          {brand.sections?.grid_see_all || 'Lihat semua deal →'}
+          {sectionText(brand.sections, 'campaign_cta')} →
         </Link>
       </div>
       <div className="product-grid" style={{ marginTop: 16 }}>
@@ -208,7 +208,7 @@ function Grid({ grid }) {
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12 }}>
         <h2 style={h2}>{grid.title}</h2>
         <Link to="/katalog" className="hv-pink" style={{ fontWeight: 700, fontSize: 13.5 }}>
-          {brand.sections?.grid_see_all || 'Lihat semua →'}
+          {sectionText(brand.sections, 'grid_see_all')} →
         </Link>
       </div>
       <div className="product-grid" style={{ marginTop: 16 }}>
@@ -267,16 +267,14 @@ function Testimonial({ story }) {
     <section style={{ ...wrap, padding: '44px 20px 0' }}>
       <div style={{ background: 'var(--fm-tint-2)', borderRadius: 18, padding: '32px 28px', display: 'grid', gap: 18, gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', alignItems: 'center' }}>
         <div>
-          {brand.sections?.story_eyebrow && <div style={eyebrow}>{brand.sections.story_eyebrow}</div>}
+          <div style={eyebrow}>{sectionText(brand.sections, 'story_eyebrow')}</div>
           <h2 style={{ ...h2, marginTop: 6 }}>{story.title}</h2>
         </div>
         <div>
           {story.text && <p style={{ margin: 0, fontSize: 16, lineHeight: 1.6, color: 'var(--fm-ink)', fontWeight: 500 }}>{story.text}</p>}
-          {brand.sections?.story_cta && (
-            <Link to="/katalog" className="fm-btn fm-btn-primary" style={{ marginTop: 18 }}>
-              {brand.sections.story_cta}
-            </Link>
-          )}
+          <Link to="/tentang" className="fm-btn fm-btn-primary" style={{ marginTop: 18 }}>
+            {sectionText(brand.sections, 'story_cta')}
+          </Link>
         </div>
       </div>
     </section>
@@ -293,12 +291,11 @@ function WhatsAppCta() {
       <div style={{ border: '1.5px dashed var(--fm-mint)', borderRadius: 18, padding: '24px 26px', display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
         <div style={{ flex: '1 1 320px' }}>
           <h2 style={{ ...h2, fontSize: 20 }}>Promo ke WhatsApp</h2>
-          <p style={{ margin: '6px 0 0', fontSize: 13.5, color: 'var(--fm-muted)' }}>
-            {brand.whatsapp_text || 'Dapat info diskon dan produk baru lebih dulu.'}
-          </p>
+          {/* ponytail: heading and this line are template words until section_copy grows keys for them. */}
+          <p style={{ margin: '6px 0 0', fontSize: 13.5, color: 'var(--fm-muted)' }}>Dapat info diskon dan produk baru lebih dulu.</p>
         </div>
         <a href={brand.whatsapp_url} target="_blank" rel="noopener noreferrer" className="fm-btn fm-btn-primary">
-          Chat WhatsApp
+          {String(brand.whatsapp_text ?? '').trim() || 'Chat WhatsApp'}
         </a>
       </div>
     </section>

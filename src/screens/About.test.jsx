@@ -86,4 +86,24 @@ describe('About', () => {
 
     expect(screen.getByLabelText('Tentang Toko Lain')).toBeTruthy();
   });
+
+  it('draws the template labels behind blank ones, and the merchant’s when set', () => {
+    withBrand({ aboutTitle: 'T', sections: { story_eyebrow: '  ' }, whatsapp_url: 'https://wa.me/62', whatsapp_text: '' });
+    render(<About />);
+    expect(screen.getByText('Cerita kami')).toBeTruthy();
+    expect(screen.getByText('Kunjungi kami')).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Chat WhatsApp' })).toBeTruthy();
+
+    cleanup();
+    withBrand({
+      aboutTitle: 'T',
+      sections: { story_eyebrow: 'Tentang dapur', about_address_heading: 'Alamat' },
+      whatsapp_url: 'https://wa.me/62',
+      whatsapp_text: 'Pesan lewat WA',
+    });
+    render(<About />);
+    expect(screen.getByText('Tentang dapur')).toBeTruthy();
+    expect(screen.getByText('Alamat')).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Pesan lewat WA' })).toBeTruthy();
+  });
 });

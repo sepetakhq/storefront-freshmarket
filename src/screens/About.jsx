@@ -2,6 +2,8 @@ import { Img, SIZES } from '../ui/Img.jsx';
 import { useConfig } from '@sepetakhq/storefront-kit/config/ConfigProvider';
 import { paragraphs } from '@sepetakhq/storefront-kit/shared/format';
 
+import { sectionText } from '../lib/copy.js';
+
 export default function About() {
   const { brand } = useConfig();
   // Already resolved by the API: a merchant who has not chosen a portrait gets
@@ -45,7 +47,7 @@ export default function About() {
               color: '#9AA89C',
             }}
           >
-            Cerita kami
+            {sectionText(brand.sections, 'story_eyebrow')}
           </div>
           <h1
             style={{
@@ -83,7 +85,7 @@ export default function About() {
           <div
             style={{ background: '#EFF1EC', borderRadius: 18, padding: '18px 20px', marginBottom: 18 }}
           >
-            <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 6 }}>Kunjungi kami</div>
+            <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 6 }}>{sectionText(brand.sections, 'about_address_heading')}</div>
             <div style={{ color: '#5C6B60', fontSize: 14.5, lineHeight: 1.7 }}>
               {brand.address_line1}
               <br />
@@ -109,7 +111,7 @@ export default function About() {
               fontSize: 14.5,
             }}
           >
-            {brand.whatsapp_text}
+            {String(brand.whatsapp_text ?? '').trim() || 'Chat WhatsApp'}
           </a>
           ) : null}
         </div>

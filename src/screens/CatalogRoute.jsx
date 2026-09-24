@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 
+import { useConfig } from '@sepetakhq/storefront-kit/config/ConfigProvider';
 import { useCategories, useProducts } from '@sepetakhq/storefront-kit/hooks/queries';
 
 import ProductCard from '../components/ProductCard.jsx';
 import { EmptyState, ErrorState, InlineError, ProductGridSkeleton } from '../ui/states.jsx';
-import { SORTS, applySaleFilter, catalogTitle, filterChips, sortOrDefault } from '../lib/copy.js';
+import { SORTS, applySaleFilter, catalogTitle, filterChips, sectionText, sortOrDefault } from '../lib/copy.js';
 
 const ALL = 'Semua';
 
@@ -16,6 +17,7 @@ const ALL = 'Semua';
  * loaded, which is why its count says so.
  */
 export default function CatalogRoute() {
+  const { brand } = useConfig();
   const [params, setParams] = useSearchParams();
   const cat = params.get('cat') || ALL;
   const sort = sortOrDefault(params.get('sort'));
@@ -39,8 +41,9 @@ export default function CatalogRoute() {
   const loaded = (products.data?.pages ?? []).flatMap((p) => p.products);
   const items = applySaleFilter(loaded, sale);
   const filters = { cat: cat === ALL ? '' : cat, sale, q };
-  const chips = filterChips(filters, cats);
-  const title = catalogTitle(filters, cats);
+  const promoTitle = sectionText(brand.sections, 'promo_title');
+  const chips = filterChips(filters, cats, promoTitle);
+  const title = catalogTitle(filters, cats, promoTitle);
 
   return (
     <main aria-label="Katalog" style={{ width: '100%', maxWidth: 1280, margin: '0 auto', padding: '20px 20px 56px' }}>
@@ -63,7 +66,7 @@ export default function CatalogRoute() {
           </button>
           </div>
           <div className="fm-filter-panel" data-open={filtersOpen ? 'true' : 'false'} style={{ background: '#fff', border: '1px solid var(--fm-line)', borderRadius: 14, padding: 16 }}>
-            <div style={sideHead}>Kategori</div>
+            <div style={sideHead}>{sectionText(brand.sections, 'footer_categories_heading')}</div>
             {categories.isError ? (
               <InlineError error={categories.error} onRetry={categories.refetch} />
             ) : (
@@ -85,7 +88,7 @@ export default function CatalogRoute() {
             <div style={{ ...sideHead, marginTop: 18 }}>Filter</div>
             <label style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13.5, fontWeight: 600, padding: '6px 4px', cursor: 'pointer' }}>
               <input type="checkbox" checked={sale} onChange={(e) => patch({ sale: e.target.checked ? '1' : null })} />
-              Sedang diskon
+              {promoTitle}
             </label>
           </div>
         </aside>
