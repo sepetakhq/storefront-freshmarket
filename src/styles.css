@@ -182,3 +182,11 @@ body[data-drawer="1"] { overflow: hidden; }
   box-shadow: 0 -8px 24px rgba(18, 37, 27, 0.08);
 }
 @media (min-width: 760px) { .fm-mobile-bar { display: none; } }
+
+/* --- payment and courier badges (the server's logo_url) ---------------- */
+/* A badge sits on the page's paper: a full-colour mark is unreadable on the footer's green. */
+.fm-logo-chip { display: inline-flex; align-items: center; min-height: 24px; padding: 4px 10px; border-radius: 6px; background: var(--fm-paper); }
+.fm-logo-chip img { display: block; height: 16px; width: auto; max-width: 76px; object-fit: contain; }
+/* Beside the price in a checkout row; decorative, the name says what it is. */
+.fm-choice-logo { display: block; height: 20px; width: auto; max-width: 64px; object-fit: contain; flex: none; }
+@media (max-width: 480px) { .fm-choice-logo { height: 16px; max-width: 48px; } }
