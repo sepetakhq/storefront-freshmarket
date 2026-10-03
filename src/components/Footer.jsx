@@ -29,7 +29,7 @@ export default function Footer() {
   const cats = (data ?? []).slice(0, 5);
   const shopLinks = brand.nav.filter((n) => n.path !== '/');
   const contact = contactRows(brand);
-  const payments = (paymentMethods ?? []).filter((m) => m.enabled).map((m) => m.name).filter(Boolean);
+  const payments = (paymentMethods ?? []).filter((m) => m.enabled && m.name);
   const links = brand.social_links ?? [];
   const sections = brand.sections;
 
@@ -85,10 +85,8 @@ export default function Footer() {
               <>
                 <div style={{ ...colTitle, marginTop: 18 }}>{sectionText(sections, 'footer_payment_heading')}</div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                  {payments.map((p) => (
-                    <span key={p} style={{ fontSize: 11.5, fontWeight: 700, background: 'rgba(255,255,255,.08)', color: '#CFE3D5', padding: '4px 8px', borderRadius: 6 }}>
-                      {p}
-                    </span>
+                  {chips(payments).map((p) => (
+                    <Chip key={p.name} item={p} />
                   ))}
                 </div>
               </>
@@ -101,5 +99,30 @@ export default function Footer() {
         <span>Toko online dibuat dengan Sepetak.</span>
       </div>
     </footer>
+  );
+}
+
+/**
+ * One chip per badge: "VA BCA" and "Transfer BCA" are the same mark to a
+ * buyer checking whether the shop takes their bank. A name the platform has
+ * no badge for stays text.
+ */
+export function chips(items) {
+  const seen = new Set();
+  return items.filter((x) => !x.logo_url || (!seen.has(x.logo_url) && seen.add(x.logo_url)));
+}
+
+function Chip({ item }) {
+  if (!item.logo_url) {
+    return (
+      <span style={{ display: 'inline-flex', alignItems: 'center', minHeight: 24, fontSize: 11.5, fontWeight: 700, background: 'rgba(255,255,255,.08)', color: '#CFE3D5', padding: '4px 8px', borderRadius: 6 }}>
+        {item.name}
+      </span>
+    );
+  }
+  return (
+    <span className="fm-logo-chip" title={item.name}>
+      <img src={item.logo_url} alt={item.name} loading="lazy" />
+    </span>
   );
 }

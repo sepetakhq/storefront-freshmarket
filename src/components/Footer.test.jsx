@@ -10,9 +10,9 @@ const Footer = (await import('./Footer.jsx')).default;
 
 afterEach(cleanup);
 
-function setup(sections) {
+function setup(sections, paymentMethods = [{ enabled: true, name: 'QRIS' }]) {
   config.brand = { nav: [{ path: '/katalog', label: 'Katalog' }], phone: '0812', sections };
-  config.paymentMethods = [{ enabled: true, name: 'QRIS' }];
+  config.paymentMethods = paymentMethods;
   return render(
     <MemoryRouter>
       <Footer />
@@ -37,5 +37,20 @@ describe('Footer', () => {
     });
     for (const t of ['Menu', 'Lorong', 'Hubungi', 'Bayar']) expect(screen.getByText(t)).toBeTruthy();
     expect(screen.getByRole('link', { name: 'Obral' })).toBeTruthy();
+  });
+
+  it("draws the server's badge in place of a name, once per badge, and keeps names it has none for", () => {
+    const bca = 'http://api.test/logos/payment/bca.svg';
+    const { container } = setup({}, [
+      { code: 'BCA', name: 'VA BCA', enabled: true, logo_url: bca },
+      { code: 'MANUAL_BCA', name: 'Transfer BCA', enabled: true, logo_url: bca },
+      { code: 'MANUAL_BANK_1', name: 'Transfer SeaBank', enabled: true },
+    ]);
+    const imgs = [...container.querySelectorAll('.fm-logo-chip img')];
+    expect(imgs.map((i) => i.getAttribute('src'))).toEqual([bca]);
+    // The first name behind a badge is how it is read aloud.
+    expect(screen.getByRole('img', { name: 'VA BCA' })).toBeTruthy();
+    expect(screen.queryByRole('img', { name: 'Transfer BCA' })).toBeNull();
+    expect(screen.getByText('Transfer SeaBank')).toBeTruthy();
   });
 });
