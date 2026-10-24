@@ -60,9 +60,10 @@ describe('quickAddState', () => {
     expect(quickAddState(base, 0)).toEqual({ kind: 'add', max: 5 });
     expect(quickAddState(base, 2)).toEqual({ kind: 'stepper', max: 5 });
   });
-  it('caps an uncounted or pre-order product at MAX_QTY only', () => {
+  it('caps an uncounted or pre-order product at the line maximum only', () => {
     expect(quickAddState({ ...base, stock: 0, unlimited_stock: true }, 1).max).toBe(99);
     expect(quickAddState({ ...base, stock: 0, preorder: true }, 0).max).toBe(99);
+    expect(quickAddState({ ...base, stock: 0, unlimited_stock: true, unit: 'kg' }, 0).max).toBe(99000);
   });
   it('trusts the server over a missing availability field', () => {
     expect(quickAddState({ id: 'p', stock: 3 }, 0).kind).toBe('add');
@@ -76,6 +77,7 @@ describe('stockLine', () => {
     expect(stockLine({ stock: 24, preorder: true })).toBe('');
     expect(stockLine({ stock: 24, unlimited_stock: true })).toBe('');
     expect(stockLine({ stock: 24, sold_out: true })).toBe('');
+    expect(stockLine({ stock: 5000, unit: 'kg' })).toBe('stok 5 kg');
   });
 });
 

@@ -24,7 +24,10 @@ const link = { display: 'block', color: '#CFE3D5', fontSize: 13.5, padding: '4px
  * rather than four headings over nothing.
  */
 export default function Footer() {
-  const { brand, paymentMethods } = useConfig();
+  const { brand, paymentMethods, tenant } = useConfig();
+  // The platform's mark, on the plans that carry it. Absent on an older API
+  // version, which strips the field, so nothing is drawn.
+  const badge = tenant?.sepetak_badge === true;
   const { data } = useCategories();
   const cats = (data ?? []).slice(0, 5);
   const shopLinks = brand.nav.filter((n) => n.path !== '/');
@@ -96,7 +99,11 @@ export default function Footer() {
       </div>
       <div className="fm-wrap" style={{ padding: '14px 20px 22px', borderTop: '1px solid rgba(255,255,255,.08)', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', gap: 8, fontSize: 12, color: '#9AA89C' }}>
         <span>{brand.copyright || ''}</span>
-        <span>Toko online dibuat dengan Sepetak.</span>
+        {badge && (
+          <a href="https://sepetak.com/?ref=toko" target="_blank" rel="noopener" style={{ color: '#9AA89C', whiteSpace: 'nowrap' }}>
+            Dibuat dengan Sepetak
+          </a>
+        )}
       </div>
     </footer>
   );
