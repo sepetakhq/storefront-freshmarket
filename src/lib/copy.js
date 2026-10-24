@@ -4,7 +4,7 @@
 
 import { saleState, AVAILABLE } from '@sepetakhq/storefront-kit/lib/availability';
 import { countsStock, isSoldOut, maxQty } from '@sepetakhq/storefront-kit/lib/preorder';
-import { MAX_QTY } from '@sepetakhq/storefront-kit/lib/constants';
+import { formatQty } from '@sepetakhq/storefront-kit/shared/format';
 
 /**
  * Percent off, or 0 when there is nothing honest to say: no compare price,
@@ -56,7 +56,7 @@ export function quickAddState(p, lineQty = 0) {
   if (!p) return { kind: 'disabled', max: 0 };
   if (p.has_variants) return { kind: 'variants', max: 0 };
   if (saleState(p) !== AVAILABLE || isSoldOut(p)) return { kind: 'disabled', max: 0 };
-  const max = Math.min(maxQty(p), MAX_QTY);
+  const max = maxQty(p);
   return lineQty > 0 ? { kind: 'stepper', max } : { kind: 'add', max };
 }
 
@@ -64,7 +64,7 @@ export function quickAddState(p, lineQty = 0) {
 export function stockLine(p) {
   if (!p || !countsStock(p) || isSoldOut(p)) return '';
   const n = Number(p.stock ?? 0);
-  return n > 0 ? `stok ${n}` : '';
+  return n > 0 ? `stok ${formatQty(n, p.unit)}` : '';
 }
 
 /** The countdown is worth a tick only when the end is in sight. */
